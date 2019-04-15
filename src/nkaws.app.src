@@ -1,0 +1,8 @@
+{application, nkaws, [
+    {description, "AWS Library"},
+    {vsn, "dev"},
+    {modules, []},
+    {registered, []},
+    {applications, [nklib]},
+    {env, []}
+]}.

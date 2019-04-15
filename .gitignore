@@ -1,0 +1,5 @@
+/nkaws.version
+/log
+/include/nkaws_version.hrl
+/ebin
+/.rebar3
