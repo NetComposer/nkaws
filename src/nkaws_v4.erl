@@ -28,6 +28,8 @@
 -define(EMPTY_HASH, <<"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855">>).
 -define(DEFAULT_REGION, <<"eu-west-1">>).
 
+-include_lib("nklib/include/nklib.hrl").
+
 %% ===================================================================
 %% Types
 %% ===================================================================
@@ -42,6 +44,7 @@
     key => string()|binary(),
     secret => string()|binary(),
     path => string() | binary(),            %% Uri-encoded (except for S3)
+    url => binary(),                        %% Use url or scheme/host/port
     scheme => http | https,                 %% Default https
     host => string() | binary(),            %% AWS used if not specified
     port => integer(),
@@ -195,8 +198,28 @@ do_request_v4_tmp(#{ttl:=Secs}=Config) ->
 %% Internal
 %% ===================================================================
 
+get_service(#{url:=Url}=Config) ->
+    case nklib_parse:uris(Url) of
+        [#uri{scheme=Scheme, user=User, pass=Pass, domain=Host, port=Port, path=Path}]
+            when Scheme==http; Scheme==https ->
+            Base = #{
+                scheme => to_bin(Scheme),
+                key => User,
+                secret => Pass,
+                host => Host,
+                port => Port,
+                bucket => Path
+            },
+            Config2 = maps:merge(Base, Config),
+            Config3 = maps:remove(url, Config2),
+            get_service(Config3);
+        _ ->
+            error(s3_url_invalid)
+    end;
+
 get_service(Config) ->
-    #{service:=Service, scheme:=Scheme} = Config,
+    #{service:=Service} = Config,
+    Scheme = maps:get(scheme, Config, <<"htts">>),
     Region = maps:get(region, Config, ?DEFAULT_REGION),
     DefPort = case Scheme of <<"http">> -> 80; <<"https">> -> 443 end,
     Port = to_bin(maps:get(port, Config, DefPort)),
@@ -225,6 +248,7 @@ syntax() ->
         key => binary,
         secret => binary,
         path => binary,
+        url => binary,          % Can use url or scheme/host/port
         scheme => {binary, [<<"http">>, <<"https">>]},
         host => binary,
         port => integer,
@@ -234,8 +258,8 @@ syntax() ->
         hash => binary,
         ttl => pos_integer,
         content_type => binary,
-        '__defaults' => #{method => <<"GET">>, scheme => <<"https">>},
-        '__mandatory' => [service, key, secret]
+        '__defaults' => #{method => <<"GET">>},
+        '__mandatory' => [service]
     }.
 
 
