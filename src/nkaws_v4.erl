@@ -22,7 +22,7 @@
 -module(nkaws_v4).
 -author('Carlos Gonzalez <carlosj.gf@gmail.com>').
 
--export([request_v4/1, request_v4_tmp/1]).
+-export([request_v4/1, request_v4_tmp/1, get_service/1]).
 
 %% hex(crypto:hash(sha256, <<>>))
 -define(EMPTY_HASH, <<"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855">>).
@@ -207,7 +207,14 @@ get_service(#{url:=Url}=Config) ->
                 key => User,
                 secret => Pass,
                 host => Host,
-                port => Port,
+                port => case Port of
+                    0 when Scheme==http ->
+                        80;
+                    0 when Scheme==https ->
+                        443;
+                    _ ->
+                        Port
+                end,
                 bucket => Path
             },
             Config2 = maps:merge(Base, Config),
