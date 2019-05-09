@@ -22,11 +22,13 @@
 -module(nkaws_v4).
 -author('Carlos Gonzalez <carlosj.gf@gmail.com>').
 
--export([request_v4/1, request_v4_tmp/1, get_service/1]).
+-export([request_v4/1, request_v4_tmp/1]).
 
 %% hex(crypto:hash(sha256, <<>>))
 -define(EMPTY_HASH, <<"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855">>).
--define(DEFAULT_REGION, <<"eu-west-1">>).
+-define(DEFAULT_REGION, <<"us-east-1">>).
+
+%-define(DEFAULT_REGION, <<"eu-west-1">>).
 
 -include_lib("nklib/include/nklib.hrl").
 
@@ -226,7 +228,7 @@ get_service(#{url:=Url}=Config) ->
 
 get_service(Config) ->
     #{service:=Service} = Config,
-    Scheme = maps:get(scheme, Config, <<"htts">>),
+    Scheme = maps:get(scheme, Config, <<"https">>),
     Region = maps:get(region, Config, ?DEFAULT_REGION),
     DefPort = case Scheme of <<"http">> -> 80; <<"https">> -> 443 end,
     Port = to_bin(maps:get(port, Config, DefPort)),
