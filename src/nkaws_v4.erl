@@ -26,9 +26,9 @@
 
 %% hex(crypto:hash(sha256, <<>>))
 -define(EMPTY_HASH, <<"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855">>).
--define(DEFAULT_REGION, <<"us-east-1">>).
+%-define(DEFAULT_REGION, <<"us-east-1">>).
 
-%-define(DEFAULT_REGION, <<"eu-west-1">>).
+-define(DEFAULT_REGION, <<"us-east-1">>).
 
 -include_lib("nklib/include/nklib.hrl").
 
@@ -42,7 +42,7 @@
 #{
     method => binary(),                     %% <<"GET">> | <<"POST">> | <<"PUT">>
     service => s3 | sns | atom(),
-    region => string()|binary()|atom(),     %% <<"eu-west-1">>
+    region => string()|binary()|atom(),     %% <<"us-east-1">>
     key => string()|binary(),
     secret => string()|binary(),
     path => string() | binary(),            %% Uri-encoded (except for S3)
@@ -231,18 +231,18 @@ get_service(Config) ->
     Scheme = maps:get(scheme, Config, <<"https">>),
     Region = maps:get(region, Config, ?DEFAULT_REGION),
     DefPort = case Scheme of <<"http">> -> 80; <<"https">> -> 443 end,
-    Port = to_bin(maps:get(port, Config, DefPort)),
+    Port = maps:get(port, Config, DefPort),
     Host = case maps:find(host, Config) of
         {ok, ConfigHost} ->
             ConfigHost;
         error ->
             <<Service/binary, $., Region/binary, ".amazonaws.com">>
     end,
-    FullHost = case Port==<<"80">> orelse Port==<<"443">> of
+    FullHost = case Port==80 orelse Port==443 of
         true ->
             Host;
         false ->
-            <<Host/binary, $:, Port/binary>>
+            <<Host/binary, $:, (to_bin(Port))/binary>>
     end,
     Url = <<Scheme/binary, "://", FullHost/binary>>,
     {Region, Service, FullHost, Url}.
