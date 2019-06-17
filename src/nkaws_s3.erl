@@ -64,7 +64,8 @@ nkaws_v4:request_v4_config() |
 get_object(Bucket, Path, Config) ->
     Config2 = Config#{
         method => get,
-        path => list_to_binary([$/, Bucket, Path]),
+        path => Path,
+        bucket => Bucket,
         service => s3
     },
     nkaws_v4:request_v4(Config2).
@@ -76,7 +77,8 @@ get_object(Bucket, Path, Config) ->
 get_meta(Bucket, Path, Config) ->
     Config2 = Config#{
         method => head,
-        path => list_to_binary([$/, Bucket, Path]),
+        path => Path,
+        bucket => Bucket,
         service => s3
     },
     nkaws_v4:request_v4(Config2).
@@ -114,9 +116,10 @@ put_object(Bucket, Path, CT, BodyHash, Config) ->
     Config2 = Config#{
         method => put,
         service => s3,
-        path => list_to_binary([$/, Bucket, Path]),
+        path => Path,
         headers => Headers3,
-        hash => BodyHash
+        hash => BodyHash,
+        bucket => Bucket
     },
     nkaws_v4:request_v4(Config2).
 
@@ -127,7 +130,8 @@ put_object(Bucket, Path, CT, BodyHash, Config) ->
 delete(Bucket, Path, Config) ->
     Config2 = Config#{
         method => delete,
-        path => list_to_binary([$/, Bucket, Path]),
+        path => Path,
+        bucket => Bucket,
         service => s3
     },
     nkaws_v4:request_v4(Config2).
@@ -141,8 +145,9 @@ make_get_url(Bucket, Path, TTL, Config) ->
     Config2 = Config#{
         method => <<"GET">>,
         service => s3,
+        bucket => Bucket,
         ttl => TTL,
-        path => list_to_binary([$/, Bucket, Path])
+        path => Path
     },
     nkaws_v4:request_v4_tmp(Config2).
 
@@ -156,9 +161,10 @@ make_put_url(Bucket, Path, CT, TTL, Config) ->
     Config2 = Config#{
         method => <<"PUT">>,
         service => s3,
+        bucket => Bucket,
         ttl => TTL,
         content_type => CT,
-        path => list_to_binary([$/, Bucket, Path])
+        path => Path
     },
     nkaws_v4:request_v4_tmp(Config2).
 
