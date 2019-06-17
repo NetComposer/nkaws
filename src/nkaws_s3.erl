@@ -68,7 +68,7 @@ get_object(Bucket, Path, Config) ->
         bucket => Bucket,
         service => s3
     },
-    nkaws_v4:request_v4(Config2).
+    make_s3_request(Config2).
 
 
 -spec get_meta(binary(), binary(), config()) ->
@@ -81,7 +81,7 @@ get_meta(Bucket, Path, Config) ->
         bucket => Bucket,
         service => s3
     },
-    nkaws_v4:request_v4(Config2).
+    make_s3_request(Config2).
 
 
 %% @doc
@@ -121,7 +121,7 @@ put_object(Bucket, Path, CT, BodyHash, Config) ->
         hash => BodyHash,
         bucket => Bucket
     },
-    nkaws_v4:request_v4(Config2).
+    make_s3_request(Config2).
 
 
 -spec delete(binary(), binary(), config()) ->
@@ -134,7 +134,7 @@ delete(Bucket, Path, Config) ->
         bucket => Bucket,
         service => s3
     },
-    nkaws_v4:request_v4(Config2).
+    make_s3_request(Config2).
 
 
 %% @doc Generates an URL-like access for read
@@ -149,7 +149,7 @@ make_get_url(Bucket, Path, TTL, Config) ->
         ttl => TTL,
         path => Path
     },
-    nkaws_v4:request_v4_tmp(Config2).
+    make_s3_request_tmp(Config2).
 
 
 
@@ -166,8 +166,39 @@ make_put_url(Bucket, Path, CT, TTL, Config) ->
         content_type => CT,
         path => Path
     },
-    nkaws_v4:request_v4_tmp(Config2).
+    make_s3_request_tmp(Config2).
 
+
+
+%% @private
+make_s3_request(Config) ->
+    Config2 = case Config of
+        #{region:=_, bucket:=Bucket} ->
+            Config#{
+                prefix => Bucket
+            };
+        #{bucket:=Bucket, path:=Path} ->
+            Config#{
+                path => list_to_binary([$/, Bucket, Path])
+            }
+    end,
+    nkaws_v4:request_v4(Config2).
+
+
+
+%% @private
+make_s3_request_tmp(Config) ->
+    Config2 = case Config of
+        #{region:=_, bucket:=Bucket} ->
+            Config#{
+                prefix => list_to_binary([Bucket, $.])
+            };
+        #{bucket:=Bucket, path:=Path} ->
+            Config#{
+                path => list_to_binary([$/, Bucket, Path])
+            }
+    end,
+    nkaws_v4:request_v4_tmp(Config2).
 
 
 

@@ -232,20 +232,23 @@ get_service(Config) ->
     Region = maps:get(region, Config, ?DEFAULT_REGION),
     DefPort = case Scheme of <<"http">> -> 80; <<"https">> -> 443 end,
     Port = maps:get(port, Config, DefPort),
-    Host = case maps:find(host, Config) of
+    Host1 = case maps:find(host, Config) of
         {ok, ConfigHost} ->
             ConfigHost;
-        error when Service == <<"s3">> ->
-            Bucket = maps:get(bucket, Config),
-            <<Bucket/binary, ".s3.", Region/binary, ".amazonaws.com">>;
         error ->
             <<Service/binary, $., Region/binary, ".amazonaws.com">>
-   end,
+    end,
+    Host2 = case maps:find(prefix, Config) of
+        {ok, Prefix} ->
+            <<Prefix/binary, $., Host1/binary>>;
+        error ->
+            Host1
+    end,
     FullHost = case Port==80 orelse Port==443 of
         true ->
-            Host;
+            Host2;
         false ->
-            <<Host/binary, $:, (to_bin(Port))/binary>>
+            <<Host2/binary, $:, (to_bin(Port))/binary>>
     end,
     Url = <<Scheme/binary, "://", FullHost/binary>>,
     {Region, Service, FullHost, Url}.
@@ -264,6 +267,7 @@ syntax() ->
         url => binary,          % Can use url or scheme/host/port
         scheme => {binary, [<<"http">>, <<"https">>]},
         host => binary,
+        prefix => binary,
         port => integer,
         headers => any,
         params => map,
